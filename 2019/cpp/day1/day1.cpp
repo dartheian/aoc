@@ -5,6 +5,7 @@
 #include <fstream>
 #include <algorithm>
 #include <numeric>
+#include <iterator>
 
 using namespace std;
 
@@ -14,10 +15,8 @@ vector<int> read_input(const string& filename)
 
     if(!file.is_open()) throw runtime_error("error while opening file");
 
-    vector<int> data;
-    int value;
-
-    while(file >> value) data.push_back(value);
+    istream_iterator<int> begin(file), end;
+    vector<int> data(begin, end);
 
     if(file.bad()) throw runtime_error("error while reading file");
 
