@@ -13,11 +13,11 @@ vector<int> read_input(const string& filename)
 {
     ifstream file {filename};
 
-    if(!file.is_open()) throw runtime_error("error while opening file");
+    if(!file.is_open()) throw runtime_error {"error while opening file"};
 
-    vector<int> data {istream_iterator<int>(file), istream_iterator<int>()};
+    vector<int> data {istream_iterator<int> {file}, istream_iterator<int>{}};
 
-    if(file.bad()) throw runtime_error("error while reading file");
+    if(file.bad()) throw runtime_error {"error while reading file"};
 
     return data;
 }
@@ -36,7 +36,7 @@ int calculate_total_fuel(vector<int>& masses)
 
 int main(const int argc, char const * const argv[])
 {
-    if(argc != 2) throw invalid_argument("missing input filename");
+    if(argc != 2) throw invalid_argument {"missing input filename"};
 
     vector<int> masses {read_input(argv[1])};
 
