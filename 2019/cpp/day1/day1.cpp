@@ -11,12 +11,11 @@ using namespace std;
 
 vector<int> read_input(const string& filename)
 {
-    ifstream file(filename);
+    ifstream file {filename};
 
     if(!file.is_open()) throw runtime_error("error while opening file");
 
-    istream_iterator<int> begin(file), end;
-    vector<int> data(begin, end);
+    vector<int> data {istream_iterator<int>(file), istream_iterator<int>()};
 
     if(file.bad()) throw runtime_error("error while reading file");
 
@@ -25,7 +24,7 @@ vector<int> read_input(const string& filename)
 
 int calculate_fuel(const int mass)
 {
-    int fuel = mass / 3 - 2;
+    int fuel {mass / 3 - 2};
     return fuel > 0 ? fuel + calculate_fuel(fuel) : 0;
 }
 
@@ -39,7 +38,7 @@ int main(const int argc, char const * const argv[])
 {
     if(argc != 2) throw invalid_argument("missing input filename");
 
-    vector<int> masses = read_input(argv[1]);
+    vector<int> masses {read_input(argv[1])};
 
     cout << calculate_total_fuel(masses) << endl;
 }
