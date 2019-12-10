@@ -6,20 +6,20 @@
 
 using namespace std;
 
-vector<int> read_input(const string& filename)
+vector<int> read_intcode_program(const string& filename)
 {
     ifstream file {filename};
 
     if(!file.is_open()) throw runtime_error {"error while opening file"};
 
-    vector<int> data;
-    string token;
+    vector<int> program;
+    string intcode;
 
-    while(getline(file, token, ',')) data.push_back(stoi(token));
+    while(getline(file, intcode, ',')) program.push_back(stoi(intcode));
 
     if(file.bad()) throw runtime_error {"error while reading file"};
 
-    return data;
+    return program;
 }
 
 void run_intcode_program(vector<int>& program)
@@ -50,8 +50,7 @@ bool test_intcode_program(vector<int> program, int noun, int verb)
 
     run_intcode_program(program);
 
-    if(program[0] == 19690720) return true;
-    else return false;
+    return program[0] == 19690720 ? true : false;
 }
 
 void determine_inputs(vector<int>& program)
@@ -69,7 +68,7 @@ int main(const int argc, char const * const argv[])
 {
     if(argc != 2) throw invalid_argument {"missing input filename"};
 
-    vector<int> program {read_input(argv[1])};
+    vector<int> program {read_intcode_program(argv[1])};
 
     determine_inputs(program);
 }
