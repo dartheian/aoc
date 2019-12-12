@@ -35,6 +35,6 @@ with open(argv[1]) as file:
 
     program = list(map(int, file.readline().split(',')))
 
-    for noun, verb in product(range(100), repeat=2):
+for noun, verb in product(range(100), repeat=2):
 
-        if test_intcode_input(program.copy(), noun, verb) : print(100 * noun + verb)
+    if test_intcode_input(program.copy(), noun, verb) : print(100 * noun + verb)
