@@ -5,16 +5,16 @@ type Point  = (Int, Int)
 type Range  = (Int, Int)
 
 split :: (Char -> Bool) -> String -> [String]
-split predicate string =  case dropWhile predicate string of
+split p s = case dropWhile p s of
     "" -> []
-    string' -> w : split predicate string''
-        where (w, string'') = break predicate string'
+    s' -> w : split p s''
+        where (w, s'') = break p s'
 
-parse_vector :: String -> Vector
-parse_vector (direction : magnitude) = (direction, read magnitude ::Int)
+read_vector :: String -> Vector
+read_vector (direction : magnitude) = (direction, read magnitude ::Int)
 
-parse_vectors :: String -> [Vector]
-parse_vectors line = map parse_vector [token | token <- split (==',') line]
+read_vectors :: String -> [Vector]
+read_vectors s = map read_vector [s' | s' <- split (==',') s]
 
 move :: Point -> Vector -> Point
 move (x, y) (direction, magnitude)
@@ -23,41 +23,46 @@ move (x, y) (direction, magnitude)
     | direction == 'L' = (x - magnitude, y)
     | direction == 'R' = (x + magnitude, y)
 
-generate_curve :: String -> [Point]
-generate_curve line = scanl move (0, 0) [vector | vector <- parse_vectors line]
+generate_segments :: String -> [Point]
+generate_segments s = scanl move (0, 0) [v | v <- read_vectors s]
 
-project :: (Point, Point) -> (Range, Range)
-project ((x1, y1), (x2, y2)) = ((min x1 x2, max x1 x2), (min y1 y2, max y1 y2))
+project_segment :: (Point, Point) -> (Range, Range)
+project_segment ((x1, y1), (x2, y2)) = ((min x1 x2, max x1 x2), (min y1 y2, max y1 y2))
 
 project_segments :: [Point] -> [(Range, Range)]
-project_segments curve = [project segment | segment <- zip curve (tail curve)]
+project_segments s = [project_segment s' | s' <- zip s $ tail s]
 
-reconstruct_points :: [Int] -> [Int] -> [Point]
-reconstruct_points x y =  [(x', y') | x' <- x, y' <- y]
+do_ranges_intersect :: Range -> Range -> Bool
+do_ranges_intersect (a1, b1) (a2, b2) = not (b1 < a2 || b2 < a1)
 
-intersect_ranges :: [Int] -> [Int] -> [Int]
-intersect_ranges a b
-    | a == [] ||b == [] = []
-    | head a == head b  = head a : intersect_ranges (tail a) (tail b)
-    | head a < head b   = intersect_ranges (tail a) b
-    | head a > head b   = intersect_ranges a (tail b)
+do_projections_intersect :: (Range, Range) -> (Range, Range) -> Bool
+do_projections_intersect (x1, y1) (x2, y2) = do_ranges_intersect x1 x2 && do_ranges_intersect y1 y2
 
-intersect_projections :: Range -> Range -> [Int]
-intersect_projections (a1, b1) (a2, b2) = intersect_ranges [a1..b1] [a2..b2]
+intersect_ranges :: Range -> Range -> Range
+intersect_ranges (a1, b1) (a2, b2) = (max a1 a2, min b1 b2)
 
-intersect_segments :: (Range, Range) -> (Range, Range) -> [Point]
-intersect_segments (xa, ya) (xb, yb) = reconstruct_points (intersect_projections xa xb) (intersect_projections ya yb)
+intersect_projections :: (Range, Range) -> (Range, Range) -> (Range, Range)
+intersect_projections (x1, y1) (x2, y2)
+    | do_projections_intersect (x1, y1) (x2, y2) == False = ((0, 0), (0, 0))
+    | otherwise = (intersect_ranges x1 x2, intersect_ranges y1 y2)
 
-find_intersections :: [Point] -> [Point] -> [Point]
-find_intersections curve1 curve2 = foldl (++) [] [intersect_segments s1 s2 | s1 <- project_segments curve1, s2 <- project_segments curve2]
+projection_distance :: (Range, Range) -> Int
+projection_distance ((x1, x2), (y1, y2))
+    | ((x1, x2), (y1, y2)) == ((0, 0), (0, 0)) = 0
+    | x_contains_0 && y_contains_0 = 1
+    | x_contains_0 = min (abs y1) (abs y2)
+    | y_contains_0 = min (abs x1) (abs x2)
+    | otherwise    = min (abs y1) (abs y2) + min (abs x1) (abs x2)
+    where x_contains_0 = do_ranges_intersect (x1, x2) (0, 0)
+          y_contains_0 = do_ranges_intersect (y1, y2) (0, 0)
 
-manhattan_distance :: Point -> Int
-manhattan_distance (x, y) = abs x + abs y
+find_intersections :: [(Range, Range)] -> [(Range, Range)] -> [(Range, Range)]
+find_intersections a b = [intersect_projections p1 p2 | p1 <- a, p2 <- b]
 
 main = do
     args    <- getArgs
     content <- readFile (head args)
-    let curves = [generate_curve line | line <- lines content]
-    let intersections = find_intersections (curves !! 0) (curves !! 1)
-    let distances = map manhattan_distance intersections
-    print (minimum (tail distances))
+    let projections = [project_segments . generate_segments $ line | line <- lines content]
+    let intersections = find_intersections (projections !! 0) (projections !! 1)
+    let distances = map projection_distance intersections
+    print $ minimum $ filter (/=0) distances
