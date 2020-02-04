@@ -12,6 +12,7 @@ split p s = case dropWhile p s of
 
 read_vector :: String -> Vector
 read_vector (direction : magnitude) = (direction, read magnitude ::Int)
+read_vector [] = error "Invalid input"
 
 read_vectors :: String -> [Vector]
 read_vectors s = map read_vector [s' | s' <- split (==',') s]
@@ -22,6 +23,7 @@ move (x, y) (direction, magnitude)
     | direction == 'D' = (x, y - magnitude)
     | direction == 'L' = (x - magnitude, y)
     | direction == 'R' = (x + magnitude, y)
+    | otherwise = error "Invalid direction"
 
 generate_segments :: String -> [Point]
 generate_segments s = scanl move (0, 0) [v | v <- read_vectors s]
@@ -59,9 +61,10 @@ projection_distance ((x1, x2), (y1, y2))
 find_intersections :: [(Range, Range)] -> [(Range, Range)] -> [(Range, Range)]
 find_intersections a b = [intersect_projections p1 p2 | p1 <- a, p2 <- b]
 
+main :: IO ()
 main = do
     args    <- getArgs
-    content <- readFile (head args)
+    content <- readFile $ head args
     let projections = [project_segments . generate_segments $ line | line <- lines content]
     let intersections = find_intersections (projections !! 0) (projections !! 1)
     let distances = map projection_distance intersections
