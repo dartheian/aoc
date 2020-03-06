@@ -7,11 +7,11 @@ recursiveFuel :: Integer -> Integer
 recursiveFuel = sum . takeWhile (> 0) . tail . iterate fuel
 
 totalFuel :: [Integer] -> Integer
-totalFuel = sum . (recursiveFuel <$>)
+totalFuel = sum . fmap recursiveFuel
 
 main :: IO ()
 main = do
     [filename] <- getArgs
     content    <- readFile filename
     let masses = read <$> lines content
-    print $ totalFuel masses
+    print (totalFuel masses)
