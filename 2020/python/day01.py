@@ -1,15 +1,13 @@
-from sys import argv
+import fileinput
 from math import prod
 from itertools import combinations
 
-
-def day01(path='../input/day01.txt', n=3, m=2020):
-    with open(path) as file:
+def day01(n):
+    with fileinput.input() as file:
         numbers = map(int, file)
-        return (prod(c) for c in combinations(numbers, n) if sum(c) == m)
+        for combination in combinations(numbers, n):
+            if sum(combination) == 2020:
+                return prod(combination)
 
-
-if __name__ == '__main__':
-    print(next(day01(n=2)))
-    print(next(day01(n=3)))
-
+print(day01(2))
+print(day01(3))

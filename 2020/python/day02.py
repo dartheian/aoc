@@ -1,24 +1,25 @@
-from sys import argv
-from re import search
+import fileinput, re
 from collections import Counter
 
+pattern = re.compile('^(\d+)-(\d+) (\w): (\w+)\n$')
+
 def parse(line):
-    policyL, policyR, character, password = search('(\d+)-(\d+) (\w): (\w+)', line).groups()
-    return (int(policyL), int(policyR), character, password) 
+    low, high, character, password = pattern.match(line).groups()
+    return int(low), int(high), character, password
 
-checkA = lambda policyL, policyR, character, password : policyL <= Counter(password)[character] <= policyR
+def policyA(low, high, character, password):
+    return low <= password.count(character) <= high
 
-def checkB(policyL, policyR, character, password):
-    checkL = password[policyL - 1] == character
-    checkR = password[policyR - 1] == character
-    return checkL != checkR
+def policyB(low, high, character, password):
+    low = password[low - 1] == character
+    high = password[high - 1] == character
+    return low != high
 
-def day02(check, path='../input/day02.txt'):
-    with open(path) as file:
-        data = map(parse, file)
-        return sum(map(lambda e : check(*e), data))
+def day02(check_policy):
+    with fileinput.input() as file:
+        entries = map(parse, file)
+        successes = map(lambda e: check_policy(*e), entries)
+        return sum(successes)
 
-if __name__ == '__main__':
-    print(day02(checkA))
-    print(day02(checkB))
-
+print(day02(policyA))
+print(day02(policyB))
